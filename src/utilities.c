@@ -2809,19 +2809,42 @@ void Bootstrap(t_tree *tree, int tbe_bootstrap)
       for(j=0;j<boot_data->crunch_len;j++) boot_data->wght[j] = 0;
 
       init_len = 0;
+      // for(j=0;j<boot_data->init_len;j++)
+      //   {
+      //     position = Rand_Int(0,(int)(tree->data->init_len-1.0));
+      //     boot_data->wght[site_num[position]] += 1;
+      //     init_len++;
+      //   }
+
+      phydbl weight_total = 0.0;
+      phydbl aln_len = (phydbl)(boot_data->init_len);
       for(j=0;j<boot_data->init_len;j++)
         {
-          position = Rand_Int(0,(int)(tree->data->init_len-1.0));
-          boot_data->wght[site_num[position]] += 1;
+          phydbl this_weight = -log(1.0 - Uni());
+          weight_total += this_weight;
+          boot_data->wght[site_num[j]] += this_weight;
           init_len++;
         }
 
+      for(j=0;j<boot_data->crunch_len;j++)
+        {
+          boot_data->wght[j] /= weight_total;
+          boot_data->wght[j] *= aln_len;
+        }
+      
       if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
 
-      init_len = 0;
-      for(j=0;j<boot_data->crunch_len;j++) init_len += boot_data->wght[j];
+      // init_len = 0;
+      // for(j=0;j<boot_data->crunch_len;j++) init_len += boot_data->wght[j];
 
-      if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
+      phydbl sum = 0.0;
+      for(j=0;j<boot_data->crunch_len;j++) sum += boot_data->wght[j];
+
+      phydbl dbl_init_len = (phydbl)(tree->data->init_len);
+
+      // if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
+      phydbl delta = fabs(sum - dbl_init_len);
+      if( delta > 0.000001 ) Exit("\n. Pb. when copying sequences\n");
 
       if(tree->io->datatype == NT)      Get_Base_Freqs(boot_data);
       else if(tree->io->datatype == AA) Get_AA_Freqs(boot_data);
