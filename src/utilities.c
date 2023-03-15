@@ -3160,8 +3160,7 @@ void Bootstrap(t_tree *tree)
           // PhyML_Fprintf(stderr,"\n\nc(");
           for(j=0;j<boot_data->init_len;j++)
             {
-              // phydbl this_weight = Rexp(1.0);
-              phydbl this_weight = Rgamma(bb_alpha,1.0);
+              phydbl this_weight = Rexp(1.0);
               // PhyML_Fprintf(stderr,"%f, ",this_weight);
               weight_total += this_weight;
               boot_data->wght[site_num[j]] += this_weight;
