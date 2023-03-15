@@ -3144,7 +3144,8 @@ void Bootstrap(t_tree *tree)
 
   boot_data = Copy_Cseq(tree->data,tree->io);
   
-  PhyML_Printf("\n\n. Non parametric bootstrap analysis \n\n");
+  if (tree->io->use_bayes_boot == YES) PhyML_Printf("\n\n. Non parametric (Bayesian) bootstrap analysis \n\n");
+  else PhyML_Printf("\n\n. Non parametric bootstrap analysis \n\n");
   PhyML_Printf("  [");
 
   for(replicate=0;replicate<tree->io->n_boot_replicates;replicate++)
@@ -3152,21 +3153,59 @@ void Bootstrap(t_tree *tree)
       for(j=0;j<boot_data->crunch_len;j++) boot_data->wght[j] = 0;
 
       init_len = 0;
-      for(j=0;j<boot_data->init_len;j++)
+      if(tree->io->use_bayes_boot == YES)
         {
-          position = Rand_Int(0,(int)(tree->data->init_len-1.0));
-          boot_data->wght[site_num[position]] += 1;
-          init_len++;
+          phydbl weight_total = 0.0;
+          phydbl aln_len = (phydbl)(boot_data->init_len);
+          // PhyML_Fprintf(stderr,"\n\nc(");
+          for(j=0;j<boot_data->init_len;j++)
+            {
+              // phydbl this_weight = Rexp(1.0);
+              phydbl this_weight = Rgamma(bb_alpha,1.0);
+              // PhyML_Fprintf(stderr,"%f, ",this_weight);
+              weight_total += this_weight;
+              boot_data->wght[site_num[j]] += this_weight;
+              init_len++;
+            }
+          // PhyML_Fprintf(stderr,")\n\n");
+
+          phydbl the_const = aln_len/weight_total;
+          for(j=0;j<boot_data->crunch_len;j++)
+            {
+              boot_data->wght[j] *= the_const;
+            }
+          
+          if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
+
+          // init_len = 0;
+          // for(j=0;j<boot_data->crunch_len;j++) init_len += boot_data->wght[j];
+
+          phydbl sum = 0.0;
+          for(j=0;j<boot_data->crunch_len;j++) sum += boot_data->wght[j];
+
+          phydbl dbl_init_len = (phydbl)(tree->data->init_len);
+
+          // if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
+          phydbl delta = fabs(sum - dbl_init_len);
+          if( delta > 0.000001 ) Exit("\n. Pb. when copying sequences\n");
         }
+      else
+        {
+          for(j=0;j<boot_data->init_len;j++)
+            {
+              position = Rand_Int(0,(int)(tree->data->init_len-1.0));
+              boot_data->wght[site_num[position]] += 1;
+              init_len++;
+            }
 
-      if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
+          if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
 
-      init_len = 0;
-      for(j=0;j<boot_data->crunch_len;j++) init_len += boot_data->wght[j];
+          init_len = 0;
+          for(j=0;j<boot_data->crunch_len;j++) init_len += boot_data->wght[j];
 
-      
-      if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
-
+          
+          if(init_len != tree->data->init_len) Exit("\n. Pb. when copying sequences\n");
+        }
       
       if(tree->io->datatype == NT)      Get_Base_Freqs(boot_data);
       else if(tree->io->datatype == AA) Get_AA_Freqs(boot_data);

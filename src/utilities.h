@@ -1371,7 +1371,8 @@ typedef struct __Option { /*! mostly used in 'help.c' */
   short int                    do_tbe;
   short int                   do_boot;
   short int                   do_alrt;
-
+  short int             use_bayes_boot;
+  
   short int             edge_len_unit;
 
 }option;

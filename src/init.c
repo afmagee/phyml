@@ -633,6 +633,7 @@ void Set_Defaults_Input(option* io)
   io->n_boot_replicates          = 0;
   io->print_mat_and_exit         = NO;
   io->edge_len_unit              = SUBSTITUTIONS;    
+  io->use_bayes_boot             = NO;
   
 #ifdef BEAGLE
   io->beagle_resource            = 0;

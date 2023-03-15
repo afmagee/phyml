@@ -131,6 +131,7 @@ int Read_Command_Line(option *io, int argc, char **argv)
       {"precision",           required_argument,NULL,82},
       {"l_min",               required_argument,NULL,83},
       {"print_mat_and_exit",  no_argument,NULL,84},
+	  {"use_bayes_boot",      no_argument,NULL,85},
       {0,0,0,0}
     };
 
@@ -181,6 +182,11 @@ int Read_Command_Line(option *io, int argc, char **argv)
 
       switch(c)
 	{
+		case 85 :
+		  {
+			io->use_bayes_boot = YES;
+			break;
+		  }
         case 84 :
           {
             io->print_mat_and_exit = YES;
